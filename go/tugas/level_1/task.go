@@ -50,7 +50,7 @@ func DiffError() {
 		fungsi errors.New adalah untuk membuat nilai error dengan menggunakan
 		format string secara statis
 	*/
-	err = errors.New("output errors.New")
+	err = errors.New("terjadi galat pada server")
 	fmt.Println(err)
 }
 
