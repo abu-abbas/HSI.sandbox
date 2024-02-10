@@ -7,44 +7,44 @@
     [database]
     github.com/go-chi/chi v1.5.5
     github.com/jmoiron/sqlx v1.3.5
-	github.com/mattn/go-sqlite3 v1.14.22
+		github.com/mattn/go-sqlite3 v1.14.22
 
-	[router]
-	github.com/go-chi/chi v1.5.5
+		[router]
+		github.com/go-chi/chi v1.5.5
 
-	[utils]
-	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/viper v1.18.2
+		[utils]
+		github.com/sirupsen/logrus v1.9.3
+		github.com/spf13/viper v1.18.2
     ```
 
     Struktur folder
     ```
-        .
-        ├── api
-        │  ├── routes.go
-        │  └── server.go
-        ├── config
-        │  ├── config.go
-        │  └── config.toml
-        ├── controllers
-        │  └── item.go
-        ├── db
-        │  ├── connection.go
-        │  └── tugas_4.db
-        ├── entity
-        │  ├── detail.go
-        │  └── item.go
-        ├── go.mod
-        ├── go.sum
-        ├── handler
-        │  └── response.go
-        ├── main.go
-        ├── model
-        │  ├── detail.go
-        │  └── item.go
-        ├── readme.md
-        └── utils
-           └── error.go
+		.
+		├── api
+		│  ├── routes.go
+		│  └── server.go
+		├── config
+		│  ├── config.go
+		│  └── config.toml
+		├── controllers
+		│  └── item.go
+		├── db
+		│  ├── connection.go
+		│  └── tugas_4.db
+		├── entity
+		│  ├── detail.go
+		│  └── item.go
+		├── go.mod
+		├── go.sum
+		├── handler
+		│  └── response.go
+		├── main.go
+		├── model
+		│  ├── detail.go
+		│  └── item.go
+		├── readme.md
+		└── utils
+				└── error.go
     ```
 
     Untuk inisialisai awal (entry point) yaitu `main.go`
@@ -58,7 +58,7 @@
     }
     ```
 
-    `func CreateApp()` yaitu untuk inisialisai config server dan router pada library `api.go` adalah sebagai berikut:
+    `func CreateApp()` yaitu untuk inisialisasi config server dan router pada library `api.go` adalah sebagai berikut:
     ```go
     func CreateApp() *AppServer {
     	cfg := config.GetYamlValue().ServerConfig
@@ -113,7 +113,6 @@
 
     	return shutdown
     }
-
     ```
 
     Router yang berfungsi sebagai pengatur request datang dan mengembalikan response
@@ -287,7 +286,6 @@
     		}
     	}
     }
-
     ```
 
     `model` untuk insert
@@ -390,7 +388,6 @@
     		}
     	}
     }
-
     ```
 
     `model` untuk delete item
