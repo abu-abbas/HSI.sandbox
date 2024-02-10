@@ -203,28 +203,188 @@
 
     Proses fetching data pada `model` seperti dilaporkan pada tugas level 3
     ```go
-    func (i Item) Get() ([]entity.Item, error) {
-    	var items []entity.Item
+    type Item struct {
+    	model model.Item
+    	res   handler.JsonBody
+    }
 
-    	qry := "SELECT * FROM items"
-    	con := db.Connect()
-    	err := con.Select(&items, qry)
+    func (i *Item) Index(w http.ResponseWriter, r *http.Request) {
+    	items, err := i.model.Get()
 
     	if err != nil {
-    		if err == sql.ErrNoRows {
-    			return items, errors.New("item tidak ditemukan")
-    		} else {
-    			return items, err
-    		}
+    		log.Errorf("gagal mendapatkan items, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusInternalServerError
+    		i.res.Message = "Terjadi kesalahan pada server. Silakan hubungi Admin"
+    	} else {
+    		i.res.HttpStatus = "success"
+    		i.res.HttpCode = http.StatusOK
+    		i.res.Payload = items
     	}
 
-    	return items, nil
+    	handler.JsonResponse(w, i.res)
     }
     ```
 
     * Proses Create Item
+    ![Get All Items](https://raw.githubusercontent.com/abu-abbas/HSI.sandbox/main/go/tugas/level_4/snapshot/createItem.png)
+
+    ```go
+    func (i *Item) findById(id int64, w http.ResponseWriter, r *http.Request) {
+    	fetch, err := i.model.FindById(id)
+
+    	if err != nil {
+    		log.Errorf("gagal mendapatkan item, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusInternalServerError
+    		i.res.Message = "Terjadi kesalahan pada server. Silakan hubungi Admin"
+    	} else {
+    		i.res.HttpStatus = "success"
+    		i.res.HttpCode = http.StatusOK
+    		i.res.Payload = fetch
+    	}
+
+    	handler.JsonResponse(w, i.res)
+    }
+
+    func (i *Item) Create(w http.ResponseWriter, r *http.Request) {
+    	entity := entity.Item{}
+
+    	if err := json.NewDecoder(r.Body).Decode(&entity); err != nil {
+    		log.Errorf("gagal saat parsing item, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusExpectationFailed
+    		i.res.Message = "Terjadi kesalahan saat parsing data"
+    		handler.JsonResponse(w, i.res)
+    	} else {
+    		itemId, err := i.model.Create(entity)
+    		if err != nil {
+    			log.Errorf("gagal saat insert item, error: %v\n", err)
+    			i.res.HttpStatus = "error"
+    			i.res.HttpCode = http.StatusInternalServerError
+    			i.res.Message = "Terjadi kesalahan saat insert data"
+    			handler.JsonResponse(w, i.res)
+    		} else {
+    			i.findById(itemId, w, r)
+    		}
+    	}
+    }
+
+    ```
+
+    `model` untuk insert
+    ```go
+    func (i Item) Create(item entity.Item) (int64, error) {
+    	qry := "INSERT INTO items (name, status, amount) VALUES (:name, :status, :amount)"
+    	con := db.Connect()
+    	res, err := con.NamedExec(qry, &item)
+
+    	if err != nil {
+    		return -1, err
+    	}
+
+    	return res.LastInsertId()
+    }
+    ```
+
+    * Proses Update Item
+    ![Get All Items](https://raw.githubusercontent.com/abu-abbas/HSI.sandbox/main/go/tugas/level_4/snapshot/updateItem.png)
+    ```go
+    func (i *Item) Edit(w http.ResponseWriter, r *http.Request) {
+    	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+
+    	if err != nil {
+    		log.Errorf("gagal saat parsing id, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusInternalServerError
+    		i.res.Message = "Terjadi kesalahan parsing id"
+    		handler.JsonResponse(w, i.res)
+
+    		return
+    	}
+
+    	entity := entity.Item{Id: int64(id)}
+    	if err := json.NewDecoder(r.Body).Decode(&entity); err != nil {
+    		log.Errorf("gagal saat parsing item, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusExpectationFailed
+    		i.res.Message = "Terjadi kesalahan saat parsing data"
+    		handler.JsonResponse(w, i.res)
+
+    		return
+    	}
+
+    	_, err = i.model.UpdateItemStatus(entity)
+    	if err != nil {
+    		log.Errorf("gagal saat update item, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusInternalServerError
+    		i.res.Message = "Terjadi kesalahan saat update data"
+    		handler.JsonResponse(w, i.res)
+
+    		return
+    	}
+
+    	i.findById(int64(id), w, r)
+    }
+    ```
+
+    `model` untuk update item
+    ```go
+    func (i Item) UpdateItemStatus(item entity.Item) (int64, error) {
+    	qry := "UPDATE items SET status = :status WHERE id = :id"
+    	con := db.Connect()
+    	res, err := con.NamedExec(qry, item)
+    	if err != nil {
+    		return -1, err
+    	}
+
+    	return res.RowsAffected()
+    }
+    ```
+
+    * Proses Delete Item
+    ![Get All Items](https://raw.githubusercontent.com/abu-abbas/HSI.sandbox/main/go/tugas/level_4/snapshot/deleteItem.png)
+    ```go
+    func (i *Item) Delete(w http.ResponseWriter, r *http.Request) {
+    	id, err := strconv.Atoi(chi.URLParam(r, "id"))
+
+    	if err != nil {
+    		log.Errorf("gagal saat parsing id, error: %v\n", err)
+    		i.res.HttpStatus = "error"
+    		i.res.HttpCode = http.StatusInternalServerError
+    		i.res.Message = "Terjadi kesalahan parsing id"
+    		handler.JsonResponse(w, i.res)
+    	} else {
+    		_, err = i.model.DeleteItemById(int64(id))
+
+    		if err != nil {
+    			log.Errorf("gagal saat update item, error: %v\n", err)
+    			i.res.HttpStatus = "error"
+    			i.res.HttpCode = http.StatusInternalServerError
+    			i.res.Message = "Terjadi kesalahan saat update data"
+    			handler.JsonResponse(w, i.res)
+    		} else {
+    			i.res.HttpStatus = "success"
+    			i.res.HttpCode = http.StatusOK
+    			i.res.Message = "Data berhasil dihapus"
+    			handler.JsonResponse(w, i.res)
+    		}
+    	}
+    }
+
+    ```
+
+    `model` untuk delete item
+    ```go
+    func (i Item) DeleteItemById(id int64) (int64, error) {
+    	qry := "DELETE FROM items WHERE id = ?"
+    	con := db.Connect()
+    	res := con.MustExec(qry, id)
+    	return res.RowsAffected()
+    }
+    ```
 
 2. Buatkan client untuk menembak service lain dengan protocol REST API
 
     `N/A`
-

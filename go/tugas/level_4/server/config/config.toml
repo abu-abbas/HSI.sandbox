@@ -1,0 +1,7 @@
+[SERVICE]
+port="7000"
+debug=true
+
+[DATABASE]
+driver="sqlite3"
+dbfile="./db/tugas_4.db"
