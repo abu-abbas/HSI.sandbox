@@ -137,6 +137,7 @@
     	item := controllers.Item{}
 
     	v1.Get("/", item.Index)
+    	v1.Post("/", item.Create)
     }
     ```
 
@@ -191,6 +192,88 @@
         	}
 
         	return items, nil
+        }
+        ```
+
+    * Proses insert data yang dimulai dari `controllers` adalah sbb:
+        ```go
+        func (i *Item) findById(id int64, c *fiber.Ctx) error {
+        	fetch, err := i.model.FindById(id)
+        	if err != nil {
+        		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+        			"status":  "error",
+        			"message": "Terjadi kesalahan pada server",
+        		})
+        	}
+
+        	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        		"status": "success",
+        		"data":   fetch,
+        	})
+        }
+
+        func (i *Item) Create(c *fiber.Ctx) error {
+        	entity := entity.Item{}
+        	err := c.BodyParser(&entity)
+        	if err != nil {
+        		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+        			"status":  "error",
+        			"message": "Terjadi kesalahan pada server",
+        		})
+        	}
+
+        	itemId, err := i.model.Create(entity)
+        	if err != nil {
+        		return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+        			"status":  "error",
+        			"message": "Terjadi kesalahan pada server",
+        		})
+        	}
+
+        	return i.findById(itemId, c)
+        }
+
+        ```
+
+        Untuk `model` tidak ada perubahan, masih sama dengan level sebelumnya:
+        ```go
+        func (i Item) FindById(id int64) (entity.Item, error) {
+        	var item entity.Item
+
+        	qry := "SELECT * FROM items WHERE id=?"
+        	con := db.Connect()
+        	err := con.Get(&item, qry, id)
+
+        	return i.resultCheck(item, err)
+        }
+
+        func (i Item) Create(item entity.Item) (int64, error) {
+        	qry := "INSERT INTO items (name, status, amount) VALUES (:name, :status, :amount)"
+        	con := db.Connect()
+        	res, err := con.NamedExec(qry, &item)
+
+        	if err != nil {
+        		return -1, err
+        	}
+
+        	return res.LastInsertId()
+        }
+
+        func (i Item) CreateMany(items []entity.Item) int64 {
+        	qry := "INSERT INTO items (name, status, amount) VALUES (:name, :status, :amount)"
+        	trx := db.Begin()
+        	res, err := trx.NamedExec(qry, items)
+        	if err != nil {
+        		trx.Rollback()
+        	}
+
+        	rowAffected, errRowAffected := res.RowsAffected()
+        	if errRowAffected != nil {
+        		trx.Rollback()
+        	}
+
+        	trx.Commit()
+        	return rowAffected
         }
         ```
 
