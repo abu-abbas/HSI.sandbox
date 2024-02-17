@@ -196,6 +196,7 @@
         ```
 
     * Proses insert data yang dimulai dari `controllers` adalah sbb:
+    ![Get All Items](https://github.com/abu-abbas/HSI.sandbox/blob/main/go/tugas/level_5/snapshot/create_with_auth.png?raw=true)
         ```go
         func (i *Item) findById(id int64, c *fiber.Ctx) error {
         	fetch, err := i.model.FindById(id)
@@ -274,6 +275,60 @@
 
         	trx.Commit()
         	return rowAffected
+        }
+        ```
+
+    * Untuk `ubah` dan `hapus` adalah sebagai berikut
+    ![Edit](https://github.com/abu-abbas/HSI.sandbox/blob/main/go/tugas/level_5/snapshot/edit.png?raw=true)
+
+        ![Hapus](https://github.com/abu-abbas/HSI.sandbox/blob/main/go/tugas/level_5/snapshot/delete.png?raw=true)
+        ```go
+        func (i *Item) Edit(c *fiber.Ctx) error {
+        	id, err := strconv.Atoi(c.Params("id"))
+
+        	if err != nil {
+        		return internalServerErr(err, c)
+        	}
+
+        	entity := entity.Item{Id: int64(id)}
+        	err = c.BodyParser(&entity)
+        	if err != nil {
+        		return internalServerErr(err, c)
+        	}
+
+        	_, err = i.model.UpdateItemStatus(entity)
+        	if err != nil {
+        		return internalServerErr(err, c)
+        	}
+
+        	return i.findById(int64(id), c)
+        }
+
+        func (i *Item) Delete(c *fiber.Ctx) error {
+        	id, err := strconv.Atoi(c.Params("id"))
+        	if err != nil {
+        		return internalServerErr(err, c)
+        	}
+
+        	_, err = i.model.DeleteItemById(int64(id))
+        	if err != nil {
+        		return internalServerErr(err, c)
+        	}
+
+        	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+        		"status":  "success",
+        		"message": "Data berhasil dihapus",
+        	})
+        }
+        ```
+
+        untuk `error response` karena digunakan berkali-kali sehingga dapat di refactor sbb:
+        ```go
+        func internalServerErr(err error, c *fiber.Ctx) error {
+        	return c.Status(fiber.StatusInternalServerError).JSON(&fiber.Map{
+        		"status":  "error",
+        		"message": "Terjadi kesalahan pada server",
+        	})
         }
         ```
 
