@@ -23,7 +23,14 @@
 
     ```
 
-    Berikut ini adalah hasil unit testing pada fungsi `GenerateNIKLanjutan`
+    Berikut ini adalah test case dan hasil unit testing pada fungsi `GenerateNIKLanjutan`
+
+    | Test Cases         | Input NIK     | Output Expected | Error Expected   |
+    | -------------      |-------------  |---------------- |----------------  |
+    | valid_test         |"ARN171-06140" |"ARN171-06141", "ARN171-06142"| nil |
+    | empty_nik          |""             |nil|"current nik tidak boleh kosong"|
+    | invalid_prefix_nik |"ARN171-06140" |nil|"nik invalid"                   |
+
     ```shell
     go test -v
 
