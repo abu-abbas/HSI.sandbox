@@ -29,7 +29,7 @@
     | -------------      |-------------  |---------------- |----------------  |
     | valid_test         |"ARN171-06140" |"ARN171-06141", "ARN171-06142"| nil |
     | empty_nik          |""             |nil|"current nik tidak boleh kosong"|
-    | invalid_prefix_nik |"ARN171-06140" |nil|"nik invalid"                   |
+    | invalid_prefix_nik |"RAN171-06140" |nil|"nik invalid"                   |
 
     ```shell
     go test -v
