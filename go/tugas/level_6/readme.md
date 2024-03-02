@@ -1,4 +1,4 @@
-# HSI Sandbox [Go] - Tugas Level 5
+# HSI Sandbox [Go] - Tugas Level 6
 
 1. Buatkan unit test dari fungsi sebelumnya NIK generator
 
